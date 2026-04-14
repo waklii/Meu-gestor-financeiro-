@@ -3,174 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor Wallace Pro</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    <title>Meu Gestor Financeiro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* VISUAL DO APLICATIVO */
-        :root { --azul: #007bff; --fundo: #f0f2f5; }
-        body { background: var(--fundo); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 80px; }
-        
-        .tela { display: none; padding: 20px; box-sizing: border-box; min-height: 100vh; }
-        .ativa { display: block; }
-
-        /* Estilo dos Botões e Campos (Correção de cores) */
-        input, select, button { 
-            width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; 
-            border: 1px solid #ddd; background: #fff !important; color: #000 !important; 
-            font-size: 16px; box-sizing: border-box;
-        }
-        button { background: var(--azul) !important; color: #fff !important; border: none; font-weight: bold; cursor: pointer; }
-
-        /* Barra de Navegação no Rodapé */
-        .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #ddd; z-index: 1000; }
-        .nav-btn { flex: 1; border: none; background: none; padding: 15px; font-size: 12px; text-align: center; color: #666; cursor: pointer; }
-        .nav-btn.on { color: var(--azul); font-weight: bold; }
-
-        /* Caixa de Chat da IA */
-        #chatBox { height: 300px; overflow-y: auto; background: #fff; border-radius: 15px; padding: 15px; border: 1px solid #eee; display: flex; flex-direction: column; margin-bottom: 10px; }
-        .msg { padding: 10px; border-radius: 12px; margin: 5px 0; max-width: 80%; font-size: 14px; }
-        .msg-ia { align-self: flex-start; background: #e7f3ff; color: #0056b3; }
-        .msg-user { align-self: flex-end; background: var(--azul); color: #fff; }
+        body { background-color: #f3f4f6; }
     </style>
 </head>
-<body>
+<body class="flex items-center justify-center min-h-screen">
 
-    <div id="loader" style="display:flex; justify-content:center; align-items:center; height:100vh; background:#fff;">
-        <b>🔄 Sincronizando Gestor Wallace...</b>
-    </div>
-
-    <div id="telaLogin" class="tela">
-        <h2 style="text-align:center;">🔒 Acesso Seguro</h2>
-        <input type="email" id="email" placeholder="Seu e-mail">
-        <input type="password" id="senha" placeholder="Sua senha">
-        <button onclick="logar()">Entrar / Criar Conta</button>
-        <button onclick="recuperar()" style="background:#6c757d !important;">Recuperar Senha</button>
-    </div>
-
-    <div id="telaInicio" class="tela">
-        <h2>💰 Novo Registro</h2>
-        <input type="number" id="valor" placeholder="Valor R$">
-        <input type="date" id="data">
-        <input type="text" id="desc" placeholder="O que é? (ex: Almoço)">
-        <select id="tipo">
-            <option value="receita">➕ Entrada (Dinheiro que entrou)</option>
-            <option value="despesa">➖ Saída (Dinheiro que saiu)</option>
-        </select>
-        <button onclick="salvar()">Salvar no Banco</button>
-    </div>
-
-    <div id="telaGraficos" class="tela">
-        <h2>📊 Seu Balanço Visual</h2>
-        <canvas id="meuGrafico"></canvas>
-    </div>
-
-    <div id="telaChat" class="tela">
-        <h2>💬 Assistente Wallace</h2>
-        <div id="chatBox">
-            <div class="msg msg-ia">Olá! Me conte o que você gastou hoje.</div>
+    <div id="app" class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Gestor Financeiro</h2>
+        
+        <div id="auth-form">
+            <input type="email" id="email" placeholder="E-mail" class="w-full p-2 mb-4 border rounded">
+            <input type="password" id="password" placeholder="Senha" class="w-full p-2 mb-4 border rounded">
+            <button onclick="handleAuth()" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition">
+                Entrar / Criar Conta
+            </button>
+            <p id="msg" class="mt-4 text-center text-sm text-red-500"></p>
         </div>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="inputChat" placeholder="Fale com a IA...">
-            <button onclick="falarIA()" style="width:70px;">Enviar</button>
+
+        <div id="main-content" class="hidden">
+            <p class="mb-4">Olá, <span id="user-display" class="font-bold"></span>!</p>
+            <button onclick="logout()" class="text-red-500 text-sm underline">Sair</button>
         </div>
     </div>
-
-    <nav class="nav-bottom" id="menu" style="display:none;">
-        <button class="nav-btn on" onclick="ir('telaInicio', this)">🏠<br>Início</button>
-        <button class="nav-btn" onclick="ir('telaGraficos', this)">📊<br>Gráficos</button>
-        <button class="nav-btn" onclick="ir('telaChat', this)">💬<br>Chat IA</button>
-        <button class="nav-btn" onclick="firebase.auth().signOut()">🚪<br>Sair</button>
-    </nav>
 
     <script>
-        // --- ⚠️ CONFIGURAÇÃO IMPORTANTE ---
-        // Pegue esses dados no seu projeto do Firebase:
-        const firebaseConfig = {
-            apiKey: "COLE_AQUI",
-            authDomain: "COLE_AQUI",
-            projectId: "COLE_AQUI",
-            storageBucket: "COLE_AQUI",
-            messagingSenderId: "COLE_AQUI",
-            appId: "COLE_AQUI"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const CHAVE_IA = "SUA_CHAVE_GEMINI_AQUI";
+        function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const msg = document.getElementById('msg');
 
-        // Lógica de Troca de Tela
-        function ir(id, btn) {
-            document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('on'));
-            document.getElementById(id).classList.add('ativa');
-            if(btn) btn.classList.add('on');
-            if(id === 'telaGraficos') carregarGrafico();
-        }
+            if (email && password) {
+                // Simulação de login/cadastro
+                msg.classList.remove('text-red-500');
+                msg.classList.add('text-green-500');
+                msg.innerText = "Sucesso! Entrando...";
 
-        // Monitor de Login
-        firebase.auth().onAuthStateChanged(user => {
-            document.getElementById('loader').style.display = 'none';
-            if (user) {
-                document.getElementById('menu').style.display = 'flex';
-                ir('telaInicio');
+                setTimeout(() => {
+                    document.getElementById('auth-form').classList.add('hidden');
+                    document.getElementById('main-content').classList.remove('hidden');
+                    document.getElementById('user-display').innerText = email;
+                }, 1000);
             } else {
-                document.getElementById('menu').style.display = 'none';
-                ir('telaLogin');
+                msg.innerText = "Por favor, preencha todos os campos.";
             }
-        });
-
-        async function logar() {
-            const e = document.getElementById('email').value, s = document.getElementById('senha').value;
-            try { await firebase.auth().signInWithEmailAndPassword(e, s); }
-            catch { await firebase.auth().createUserWithEmailAndPassword(e, s); }
         }
 
-        async function salvar() {
-            const v = document.getElementById('valor').value, d = document.getElementById('data').value;
-            if(!v || !d) return alert("Preencha valor e data!");
-            await db.collection("financas").add({
-                valor: parseFloat(v), data: d, tipo: document.getElementById('tipo').value,
-                desc: document.getElementById('desc').value, userId: firebase.auth().currentUser.uid
-            });
-            alert("Salvo com sucesso!");
-        }
-
-        let chart;
-        async function carregarGrafico() {
-            const snap = await db.collection("financas").where("userId", "==", firebase.auth().currentUser.uid).get();
-            let r = 0, d = 0;
-            snap.forEach(doc => { if(doc.data().tipo === 'receita') r += doc.data().valor; else d += doc.data().valor; });
-            const ctx = document.getElementById('meuGrafico').getContext('2d');
-            if(chart) chart.destroy();
-            chart = new Chart(ctx, { type: 'pie', data: { labels: ['Ganhos', 'Gastos'], datasets: [{ data: [r, d], backgroundColor: ['#28a745', '#dc3545'] }] } });
-        }
-
-        async function falarIA() {
-            const i = document.getElementById('inputChat'), c = document.getElementById('chatBox');
-            if(!i.value) return;
-            c.innerHTML += `<div class="msg msg-user">${i.value}</div>`;
-            const prompt = `Wallace disse: "${i.value}". Responda como um assistente financeiro de forma curta.`;
-            i.value = "Pensando...";
-            
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CHAVE_IA}`, {
-                    method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-                const data = await res.json();
-                c.innerHTML += `<div class="msg msg-ia">${data.candidates[0].content.parts[0].text}</div>`;
-            } catch { c.innerHTML += `<div class="msg msg-ia">Erro ao falar com a IA.</div>`; }
-            i.value = ""; c.scrollTop = c.scrollHeight;
-        }
-
-        function recuperar() {
-            const e = document.getElementById('email').value;
-            if(!e) return alert("Digite seu e-mail.");
-            firebase.auth().sendPasswordResetEmail(e).then(() => alert("E-mail de recuperação enviado!"));
+        function logout() {
+            location.reload();
         }
     </script>
 </body>
