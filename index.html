@@ -24,10 +24,7 @@
         .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #ddd; z-index: 1000; }
         .nav-btn { flex: 1; border: none; background: none; padding: 15px; font-size: 12px; text-align: center; color: #666; cursor: pointer; }
         .nav-btn.on { color: var(--azul); font-weight: bold; }
-        #chatBox { height: 300px; overflow-y: auto; background: #fff; border-radius: 15px; padding: 15px; border: 1px solid #eee; display: flex; flex-direction: column; margin-bottom: 10px; }
-        .msg { padding: 10px; border-radius: 12px; margin: 5px 0; max-width: 80%; font-size: 14px; }
-        .msg-ia { align-self: flex-start; background: #e7f3ff; color: #0056b3; }
-        .msg-user { align-self: flex-end; background: var(--azul); color: #fff; }
+        #chatBox { height: 250px; overflow-y: auto; background: #fff; border-radius: 15px; padding: 15px; border: 1px solid #eee; display: flex; flex-direction: column; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -38,10 +35,11 @@
 
     <div id="telaLogin" class="tela">
         <h2 style="text-align:center;">🔒 Acesso Seguro</h2>
+        <p style="text-align:center; font-size:12px; color:gray;">Digite seu e-mail e crie uma senha para entrar.</p>
         <input type="email" id="email" placeholder="Seu e-mail">
-        <input type="password" id="senha" placeholder="Sua senha">
-        <button onclick="logar()">Entrar / Criar Conta</button>
-        <button onclick="recuperar()" style="background:#6c757d !important;">Recuperar Senha</button>
+        <input type="password" id="senha" placeholder="Sua senha (mínimo 6 dígitos)">
+        <button id="btnLogar" onclick="logar()">ENTRAR / CADASTRAR</button>
+        <button onclick="recuperar()" style="background:#6c757d !important;">Esqueci a Senha</button>
     </div>
 
     <div id="telaInicio" class="tela">
@@ -57,28 +55,17 @@
     </div>
 
     <div id="telaGraficos" class="tela">
-        <h2>📊 Seu Balanço Visual</h2>
+        <h2>📊 Balanço Visual</h2>
         <canvas id="meuGrafico"></canvas>
-    </div>
-
-    <div id="telaChat" class="tela">
-        <h2>💬 Assistente Wallace</h2>
-        <div id="chatBox"></div>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="inputChat" placeholder="Fale com a IA...">
-            <button onclick="falarIA()" style="width:70px;">Enviar</button>
-        </div>
     </div>
 
     <nav class="nav-bottom" id="menu" style="display:none;">
         <button class="nav-btn on" onclick="ir('telaInicio', this)">🏠<br>Início</button>
         <button class="nav-btn" onclick="ir('telaGraficos', this)">📊<br>Gráficos</button>
-        <button class="nav-btn" onclick="ir('telaChat', this)">💬<br>Chat IA</button>
         <button class="nav-btn" onclick="firebase.auth().signOut()">🚪<br>Sair</button>
     </nav>
 
     <script>
-        // --- CONFIGURAÇÃO DO WALLACE ---
         const firebaseConfig = {
             apiKey: "AIzaSyA3iFxMHS0Y7_GKKI6uSO1HK_nveWRd5cQ",
             authDomain: "meugestor-40bb2.firebaseapp.com",
@@ -111,35 +98,54 @@
 
         async function logar() {
             const e = document.getElementById('email').value, s = document.getElementById('senha').value;
+            const btn = document.getElementById('btnLogar');
             if(!e || !s) return alert("Preencha e-mail e senha!");
-            try { await firebase.auth().signInWithEmailAndPassword(e, s); }
-            catch { await firebase.auth().createUserWithEmailAndPassword(e, s); }
+            
+            btn.innerText = "Carregando...";
+            try { 
+                await firebase.auth().signInWithEmailAndPassword(e, s); 
+            } catch (erro) {
+                if (erro.code === 'auth/user-not-found' || erro.code === 'auth/wrong-password') {
+                    // Se não achou, tenta criar a conta
+                    try {
+                        await firebase.auth().createUserWithEmailAndPassword(e, s);
+                        alert("Conta criada com sucesso!");
+                    } catch (e2) { alert("Erro: " + e2.message); }
+                } else { alert("Erro: " + erro.message); }
+            }
+            btn.innerText = "ENTRAR / CADASTRAR";
         }
 
         async function salvar() {
             const v = document.getElementById('valor').value, d = document.getElementById('data').value;
             if(!v || !d) return alert("Preencha valor e data!");
-            await db.collection("financas").add({
-                valor: parseFloat(v), data: d, tipo: document.getElementById('tipo').value,
-                desc: document.getElementById('desc').value, userId: firebase.auth().currentUser.uid
-            });
-            alert("Salvo com sucesso!");
+            try {
+                await db.collection("financas").add({
+                    valor: parseFloat(v), data: d, tipo: document.getElementById('tipo').value,
+                    desc: document.getElementById('desc').value, userId: firebase.auth().currentUser.uid
+                });
+                alert("Salvo com sucesso!");
+                document.getElementById('valor').value = "";
+                document.getElementById('desc').value = "";
+            } catch (e) { alert("Erro ao salvar: " + e.message); }
         }
 
         let chart;
         async function carregarGrafico() {
-            const snap = await db.collection("financas").where("userId", "==", firebase.auth().currentUser.uid).get();
-            let r = 0, d = 0;
-            snap.forEach(doc => { if(doc.data().tipo === 'receita') r += doc.data().valor; else d += doc.data().valor; });
-            const ctx = document.getElementById('meuGrafico').getContext('2d');
-            if(chart) chart.destroy();
-            chart = new Chart(ctx, { type: 'pie', data: { labels: ['Ganhos', 'Gastos'], datasets: [{ data: [r, d], backgroundColor: ['#28a745', '#dc3545'] }] } });
+            try {
+                const snap = await db.collection("financas").where("userId", "==", firebase.auth().currentUser.uid).get();
+                let r = 0, d = 0;
+                snap.forEach(doc => { if(doc.data().tipo === 'receita') r += doc.data().valor; else d += doc.data().valor; });
+                const ctx = document.getElementById('meuGrafico').getContext('2d');
+                if(chart) chart.destroy();
+                chart = new Chart(ctx, { type: 'pie', data: { labels: ['Ganhos', 'Gastos'], datasets: [{ data: [r, d], backgroundColor: ['#28a745', '#dc3545'] }] } });
+            } catch (e) { console.error(e); }
         }
 
         function recuperar() {
             const e = document.getElementById('email').value;
-            if(!e) return alert("Digite seu e-mail.");
-            firebase.auth().sendPasswordResetEmail(e).then(() => alert("E-mail enviado!"));
+            if(!e) return alert("Digite seu e-mail para recuperar.");
+            firebase.auth().sendPasswordResetEmail(e).then(() => alert("E-mail de recuperação enviado!"));
         }
     </script>
 </body>
