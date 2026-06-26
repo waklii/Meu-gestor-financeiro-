@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle Financeiro SPA</title>
+    <title>Meu Gestor Financeiro</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -33,7 +33,7 @@
 <body>
 
     <div id="telaLogin" class="tela container ativa">
-        <h2>Entrar no App</h2>
+        <h2>Entrar no Gestor Financeiro</h2>
         <input type="email" id="email" placeholder="Seu E-mail">
         <input type="password" id="senha" placeholder="Sua Senha">
         <button onclick="fazerLogin()">Entrar / Cadastrar</button>
@@ -69,7 +69,7 @@
     </div>
 
     <script>
-        // Configuração exata do seu projeto
+        // Configurações do seu Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDpauFc8LOixpeUJcU1KkF_yyI-vDJKlCE",
             authDomain: "meu-gestor-financeiroo.firebaseapp.com",
@@ -110,6 +110,7 @@
             auth.signInWithEmailAndPassword(email, senha)
                 .catch(error => {
                     if (error.code === 'auth/user-not-found') {
+                        // Se não existe, cria a conta
                         auth.createUserWithEmailAndPassword(email, senha)
                             .catch(err => {
                                 msgErro.innerText = "Erro ao criar conta: " + err.message;
@@ -153,7 +154,7 @@
                 document.getElementById('data').value = '';
             }).catch(error => {
                 console.error("Erro ao adicionar documento: ", error);
-                alert("Erro ao salvar! Verifique se o Firestore está no Modo de Teste.");
+                alert("Erro ao salvar! Verifique as regras do Firestore.");
             });
         }
 
@@ -190,7 +191,7 @@
 
                   atualizarGrafico(totalReceitas, totalDespesas);
               }, error => {
-                  console.error("Erro ao buscar dados (Pode faltar um Índice): ", error);
+                  console.error("Erro ao buscar dados: ", error);
               });
         }
 
@@ -205,7 +206,7 @@
             graficoApp = new Chart(ctx, {
                 type: 'pie',
                 data: {
-                    labels: ['Ganhos', 'Gastos'],
+                    labels: ['Receitas', 'Despesas'],
                     datasets: [{
                         data: [receitas, despesas],
                         backgroundColor: ['#28a745', '#dc3545'],
