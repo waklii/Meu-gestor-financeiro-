@@ -11,61 +11,197 @@
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f9; }
-        .tela { display: none; } 
+        :root {
+            --primary: #4361ee;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2b2d42;
+        }
+
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: var(--bg); 
+            color: var(--text);
+        }
+
+        .tela { display: none; padding: 20px; } 
         .tela.ativa { display: block; } 
         
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        input, select, button { width: 100%; padding: 10px; margin: 5px 0 15px; box-sizing: border-box; }
-        button { background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        button:hover { background-color: #0056b3; }
-        .btn-sair { background-color: #dc3545; }
-        .btn-sair:hover { background-color: #c82333; }
+        .container { 
+            max-width: 800px; 
+            margin: 20px auto; 
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .logo-app {
+            display: block;
+            margin: 0 auto 20px;
+            max-width: 120px;
+            border-radius: 20px;
+        }
+
+        /* Tipografia */
+        h2, h3 { margin-top: 0; color: var(--text); }
         
-        ul { list-style-type: none; padding: 0; }
-        li { padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
-        .receita { color: green; font-weight: bold; }
-        .despesa { color: red; font-weight: bold; }
-        .grafico-container { margin-top: 20px; max-width: 300px; margin-left: auto; margin-right: auto; }
+        /* Formulários */
+        input, select, button, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 8px 0 16px; 
+            border: 1px solid #ddd;
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 16px;
+        }
+        
+        textarea { resize: vertical; min-height: 80px; }
+
+        button { 
+            background-color: var(--primary); 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.3s;
+        }
+        button:hover { background-color: #304ffe; }
+        
+        .btn-sair { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-sair:hover { background-color: var(--danger); color: white; }
+        
+        /* Resumo de Saldos */
+        .resumo-cards {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .resumo-box {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .resumo-box h4 { margin: 0 0 10px; font-size: 14px; color: #7f8c8d; }
+        .resumo-box p { margin: 0; font-size: 20px; font-weight: bold; }
+        
+        /* Listas */
+        ul { list-style-type: none; padding: 0; margin: 0; }
+        li { 
+            padding: 15px 0; 
+            border-bottom: 1px solid #eee; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        li:last-child { border-bottom: none; }
+        
+        .receita-texto { color: var(--success); font-weight: bold; }
+        .despesa-texto { color: var(--danger); font-weight: bold; }
+        
+        .grafico-container { max-width: 350px; margin: 0 auto; }
+        
+        .badge-ia {
+            background: linear-gradient(45deg, #8a2387, #e94057, #f27121);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="telaLogin" class="tela container ativa">
-        <h2>Entrar no Gestor Financeiro</h2>
-        <input type="email" id="email" placeholder="Seu E-mail">
-        <input type="password" id="senha" placeholder="Sua Senha">
-        <button onclick="fazerLogin()">Entrar / Cadastrar</button>
-        <p id="msgErro" style="color: red; display: none;"></p>
+    <div id="telaLogin" class="tela ativa">
+        <div class="container card" style="max-width: 400px; margin-top: 50px;">
+            <img src="https://via.placeholder.com/120?text=Seu+Logo" alt="Logo do App" class="logo-app">
+            
+            <h2 style="text-align: center;">Meu Gestor Financeiro</h2>
+            <input type="email" id="email" placeholder="Seu E-mail">
+            <input type="password" id="senha" placeholder="Sua Senha">
+            <button onclick="fazerLogin()">Entrar / Cadastrar</button>
+            <p id="msgErro" style="color: var(--danger); display: none; text-align: center;"></p>
+        </div>
     </div>
 
-    <div id="telaInicio" class="tela container">
-        <h2>Meu Controle Financeiro</h2>
-        <button class="btn-sair" onclick="sair()">Sair da Conta</button>
-        
-        <hr>
+    <div id="telaInicio" class="tela">
+        <div class="container">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0;">Minhas Finanças</h2>
+                <button class="btn-sair" style="width: auto; margin: 0;" onclick="sair()">Sair</button>
+            </div>
 
-        <h3>Novo Lançamento</h3>
-        <input type="text" id="desc" placeholder="Descrição (ex: Mercado, Salário)">
-        <input type="number" id="valor" placeholder="Valor (R$)">
-        <input type="date" id="data">
-        <select id="tipo">
-            <option value="receita">Receita</option>
-            <option value="despesa">Despesa</option>
-        </select>
-        <button onclick="adicionarTransacao()">Salvar Lançamento</button>
+            <div class="resumo-cards">
+                <div class="resumo-box">
+                    <h4>Receitas</h4>
+                    <p class="receita-texto" id="totalRec">R$ 0,00</p>
+                </div>
+                <div class="resumo-box">
+                    <h4>Despesas</h4>
+                    <p class="despesa-texto" id="totalDes">R$ 0,00</p>
+                </div>
+                <div class="resumo-box">
+                    <h4>Saldo</h4>
+                    <p id="saldoAtual">R$ 0,00</p>
+                </div>
+            </div>
 
-        <hr>
+            <div class="card">
+                <h3>Novo Lançamento</h3>
+                <input type="text" id="desc" placeholder="Descrição (ex: Conta de Luz, Salário)">
+                <input type="number" id="valor" placeholder="Valor (R$)">
+                <input type="date" id="data">
+                <select id="tipo">
+                    <option value="receita">Receita (Entrada)</option>
+                    <option value="despesa">Despesa (Saída)</option>
+                </select>
+                <button onclick="adicionarTransacao()">Salvar Lançamento</button>
+            </div>
 
-        <div class="grafico-container">
-            <canvas id="meuGrafico"></canvas>
+            <div class="card">
+                <h3>Assistente Inteligente <span class="badge-ia">Em breve</span></h3>
+                <p style="font-size: 14px; color: #666; margin-top: 0;">Digite o que gastou ou recebeu e a Inteligência Artificial organizará por você.</p>
+                <textarea id="textoIA" placeholder="Ex: Hoje gastei 50 reais no mercado e recebi 200 de um freela..."></textarea>
+                <button onclick="alert('Esta função será ativada na nossa próxima etapa de integração com o Gemini!')" style="background: linear-gradient(45deg, #8a2387, #e94057); border: none;">Organizar com IA</button>
+            </div>
+
+            <div class="card">
+                <h3>Bloco de Notas</h3>
+                <textarea id="textoNota" placeholder="Escreva aqui seus lembretes, metas ou planejamentos..."></textarea>
+                <button onclick="salvarNota()" style="background-color: #2c3e50;">Salvar Anotação</button>
+                <p id="msgNota" style="color: var(--success); font-size: 14px; display: none;">Anotação salva com sucesso!</p>
+            </div>
+
+            <div class="card">
+                <h3 style="text-align: center;">Resumo Visual</h3>
+                <div class="grafico-container">
+                    <canvas id="meuGrafico"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Histórico de Transações</h3>
+                <ul id="listaTransacoes"></ul>
+            </div>
+
         </div>
-
-        <hr>
-
-        <h3>Histórico</h3>
-        <ul id="listaTransacoes"></ul>
     </div>
 
     <script>
@@ -80,12 +216,16 @@
             measurementId: "G-4DXBW6SPP5"
         };
         
-        // Inicializa o Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // Navegação de Telas
+        // Pedir permissão para notificações no navegador
+        if ("Notification" in window) {
+            Notification.requestPermission();
+        }
+
+        // Navegação
         function ir(id) {
             document.querySelectorAll('.tela').forEach(tela => tela.classList.remove('ativa'));
             document.getElementById(id).classList.add('ativa');
@@ -96,12 +236,13 @@
             if (user) {
                 ir('telaInicio');
                 carregarTransacoes(user.uid);
+                carregarNota(user.uid);
             } else {
                 ir('telaLogin');
             }
         });
 
-        // Função de Login e Cadastro
+        // Login
         function fazerLogin() {
             const email = document.getElementById('email').value;
             const senha = document.getElementById('senha').value;
@@ -110,10 +251,9 @@
             auth.signInWithEmailAndPassword(email, senha)
                 .catch(error => {
                     if (error.code === 'auth/user-not-found') {
-                        // Se não existe, cria a conta
                         auth.createUserWithEmailAndPassword(email, senha)
                             .catch(err => {
-                                msgErro.innerText = "Erro ao criar conta: " + err.message;
+                                msgErro.innerText = "Erro ao criar: " + err.message;
                                 msgErro.style.display = 'block';
                             });
                     } else {
@@ -123,11 +263,31 @@
                 });
         }
 
-        function sair() {
-            auth.signOut();
+        function sair() { auth.signOut(); }
+
+        // Bloco de Notas (Salvar e Carregar)
+        function salvarNota() {
+            const user = auth.currentUser;
+            if (!user) return;
+            const texto = document.getElementById('textoNota').value;
+            
+            db.collection('notas').doc(user.uid).set({ texto: texto })
+            .then(() => {
+                const msg = document.getElementById('msgNota');
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 3000);
+            });
         }
 
-        // Salvar dados no Firestore
+        function carregarNota(uid) {
+            db.collection('notas').doc(uid).get().then(doc => {
+                if (doc.exists) {
+                    document.getElementById('textoNota').value = doc.data().texto;
+                }
+            });
+        }
+
+        // Salvar Transação
         function adicionarTransacao() {
             const user = auth.currentUser;
             if (!user) return;
@@ -146,22 +306,21 @@
                 userId: user.uid,
                 desc: desc,
                 valor: valor,
-                data: data,
+                data: data, // Formato YYYY-MM-DD
                 tipo: tipo
             }).then(() => {
                 document.getElementById('desc').value = '';
                 document.getElementById('valor').value = '';
                 document.getElementById('data').value = '';
-            }).catch(error => {
-                console.error("Erro ao adicionar documento: ", error);
-                alert("Erro ao salvar! Verifique as regras do Firestore.");
             });
         }
 
-        // Ler dados e atualizar gráfico
+        // Ler Transações, Ordenar por Data e Verificar Notificações
         let graficoApp = null;
+        let notificacoesEnviadas = []; // Evitar notificar repetido na mesma sessão
 
         function carregarTransacoes(uid) {
+            // Ordenando diretamente pela data que o usuário escolheu
             db.collection('financas')
               .where('userId', '==', uid)
               .orderBy('data', 'desc')
@@ -171,6 +330,9 @@
                   
                   let totalReceitas = 0;
                   let totalDespesas = 0;
+                  
+                  // Pegar data de hoje no formato YYYY-MM-DD
+                  const hoje = new Date().toISOString().split('T')[0];
 
                   snapshot.forEach(doc => {
                       const item = doc.data();
@@ -178,44 +340,65 @@
                       if (item.tipo === 'receita') totalReceitas += item.valor;
                       if (item.tipo === 'despesa') totalDespesas += item.valor;
 
+                      // Lógica de Notificação para Despesas Vencendo Hoje
+                      if (item.tipo === 'despesa' && item.data === hoje && !notificacoesEnviadas.includes(doc.id)) {
+                          enviarNotificacao("Despesa Hoje!", `Lembrete: Você tem '${item.desc}' no valor de R$ ${item.valor.toFixed(2)} hoje.`);
+                          notificacoesEnviadas.push(doc.id);
+                      }
+
+                      // Formatar data para exibição (DD/MM/YYYY)
+                      const dataPartes = item.data.split('-');
+                      const dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
+
                       const li = document.createElement('li');
-                      const classeCor = item.tipo === 'receita' ? 'receita' : 'despesa';
+                      const classeCor = item.tipo === 'receita' ? 'receita-texto' : 'despesa-texto';
                       const sinal = item.tipo === 'receita' ? '+' : '-';
                       
                       li.innerHTML = `
-                          <span>${item.data} - ${item.desc}</span>
+                          <div>
+                              <strong>${item.desc}</strong><br>
+                              <small style="color: #7f8c8d;">${dataFormatada}</small>
+                          </div>
                           <span class="${classeCor}">${sinal} R$ ${item.valor.toFixed(2)}</span>
                       `;
                       lista.appendChild(li);
                   });
 
+                  // Atualizar Painel
+                  document.getElementById('totalRec').innerText = `R$ ${totalReceitas.toFixed(2)}`;
+                  document.getElementById('totalDes').innerText = `R$ ${totalDespesas.toFixed(2)}`;
+                  const saldo = totalReceitas - totalDespesas;
+                  document.getElementById('saldoAtual').innerText = `R$ ${saldo.toFixed(2)}`;
+                  document.getElementById('saldoAtual').style.color = saldo >= 0 ? 'var(--success)' : 'var(--danger)';
+
                   atualizarGrafico(totalReceitas, totalDespesas);
-              }, error => {
-                  console.error("Erro ao buscar dados: ", error);
               });
+        }
+
+        // Função de disparo de notificação
+        function enviarNotificacao(titulo, mensagem) {
+            if (Notification.permission === "granted") {
+                new Notification(titulo, { body: mensagem, icon: "https://via.placeholder.com/120" });
+            }
         }
 
         // Gerar Gráfico
         function atualizarGrafico(receitas, despesas) {
             const ctx = document.getElementById('meuGrafico').getContext('2d');
             
-            if (graficoApp) {
-                graficoApp.destroy();
-            }
+            if (graficoApp) { graficoApp.destroy(); }
 
             graficoApp = new Chart(ctx, {
-                type: 'pie',
+                type: 'doughnut', // Estilo mais moderno que o 'pie'
                 data: {
                     labels: ['Receitas', 'Despesas'],
                     datasets: [{
                         data: [receitas, despesas],
-                        backgroundColor: ['#28a745', '#dc3545'],
-                        borderWidth: 1
+                        backgroundColor: ['#2ecc71', '#e74c3c'],
+                        borderWidth: 0
                     }]
                 },
-                options: {
-                    responsive: true
-                }
+                options: { responsive: true, cutout: '70%' }
             });
         }
     </script>
